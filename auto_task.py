@@ -55,15 +55,22 @@ def _norm_loudness(audio, rate):
     if audio.ndim == 2:
         audio = audio.squeeze()
     meter = pyln.Meter(rate)
+
+    # 检查音频长度是否大于块大小
+    block_size = meter.block_size * rate
+    if len(audio) <= block_size:
+        raise ValueError("Audio length must be greater than the block size.")
+
     loudness = meter.integrated_loudness(audio)
     normalized_audio = pyln.normalize.loudness(audio, loudness, -16.0)
     return torch.from_numpy(normalized_audio)
 
 
-def prepare_audio(audio):
+def prepare_audio(audio, rate):
     """
     准备音频数据
     :param audio: 音频数据
+    :param rate: 采样率
     :return: 标准化后的音频数据
     """
     if audio.ndim == 1:
